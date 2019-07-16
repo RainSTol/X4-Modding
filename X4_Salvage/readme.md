@@ -11,3 +11,8 @@ Todo Items:
  - How to treat Xenon wrecks?
  - What about all the in game wrecks you find on map?  Aquaduct for example, or all the debris in the astroid fields?  Part of map, or salvagable?
 
+Credits:
+RainS'Tol (Creator)
+Mewosmith (Mentor)
+UniTrader (Oracle/Guru)
+X:R New Frontier mod team (Inspiration)

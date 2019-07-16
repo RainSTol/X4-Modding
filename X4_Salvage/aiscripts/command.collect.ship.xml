@@ -1,10 +1,33 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 <aiscript name="command.collect.ship" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" priority="2" version="1" >
-
-
-
-
-
-
-
+  <!--
+    Written by: RainS'Tol
+    Inspired by: Adrian (X:R A New Frontier)
+    Description: Wrapper script for cargo and salvage collect.
+  -->
+  <params>
+    <param name="target" default="null" />
+    <param name="destination" default="this.ship" />
+    <param name="stage" default="0" />
+    <param name="debugchance" default="0"/>
+  </params>
+  <init>
+    <set_command command="command.support" param="player.primaryship" />
+  </init>
+  <attention min="unknown">
+    <actions>
+      <!-- Label to allow us to repeat indefinitely -->
+      <label name="start" />
+  
+  <!-- TODO Verify Target or Targets in range can be salvaged -->
+  <!-- TODO Verify Player Ship or Selected ship can salvage -->
+  <!-- TODO Move to target or closest target in list -->
+  <!-- TODO Attempt Personnel Rescue -->
+  <!-- TODO Attempt Cargo Recovery -->
+  <!-- TODO Attempt Ship Restoration-->
+  <!-- TODO Attempt Ship Salvage -->
+  <!-- TODO Repeat if Targets exist in list -->
+  
+    </actions>
+  </attention>
 </aiscript>

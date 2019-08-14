@@ -12,7 +12,7 @@ Testing quatities of anitmatter did not have a significant impact on the direct 
 Dotty also explained that the shield capacitors energy could be used, however doing this not only leaves the capcitors probably empty, but also increases the risky to shield generator damage or complete failure since they were not designed for the interaction they are being subjected to..
 
 ## TO DO Items:
-### Shield Generator variants to include Antimatter Couplers in thier construction.
-### Order ship to activate the Quantum Entanglement Translocation Singularity Generator.... Q-Drive to us common folks.
-    - Figure a way out to calculate energy cell requirements for Q-Jump.
-### HQ research to discover the BP to make the shield generator variants, and further research to discover the distances/energy variants.
+- Shield Generator variants to include Antimatter Couplers in thier construction.
+- Order ship to activate the Quantum Entanglement Translocation Singularity Generator.... Q-Drive to us common folks.
+    -- Figure a way out to calculate energy cell requirements for Q-Jump.
+- HQ research to discover the BP to make the shield generator variants and further research to discover the distances/energy variants.

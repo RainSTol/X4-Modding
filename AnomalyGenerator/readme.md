@@ -16,3 +16,4 @@ Dotty also explained that the shield capacitors energy could be used, however do
 - Order ship to activate the Quantum Entanglement Translocation Singularity Generator.... Q-Drive to us common folks.
     -- Figure a way out to calculate energy cell requirements for Q-Jump.
 - HQ research to discover the BP to make the shield generator variants and further research to discover the distances/energy variants.
+-- T3 bp's construction costs with comparable Antimatter Couplers added to the cost.

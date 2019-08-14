@@ -5,6 +5,8 @@ Originial idea's credit goes to hwodragon's "CollectDeployables" mod. https://gi
 
 ## TO DO Items:
 - modify Dragon's aiscript to target non-player items.
+  - Only allow collect of items that will fit in bays.
+  - Undecided on how to handle mines.
   - chance of failure
     - chance of device activation/hostile.
     

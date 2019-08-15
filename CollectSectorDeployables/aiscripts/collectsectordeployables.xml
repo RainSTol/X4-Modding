@@ -155,51 +155,24 @@
       </do_else>
       
 
-      <?ingmore
-      <!-- collect target -->
-      <set_command command="command.collect" param="$target" />
-      <!-- if necessary order the ship to move to the correct zone -->
-      <do_if value="this.ship.zone != $target.zone">
-        <run_script name="'move.generic'">
-          <param name="destination" value="$target"/>
-          <param name="endintargetzone" value="true"/>
-        </run_script>
-      </do_if>
-
-      <do_if value="not $target.exists">
-        <resume label="getone"/>
-      </do_if>
-
-      <!-- move  (flight behaviour? ) -->
-      <move_to object="this.ship" destination="$target" flightbehaviour="flightbehaviour.generic" forcesteering="true" finishonapproach="false" >
-        <interrupt>
-          <conditions>
-            <check_any>
-              <event_object_collided object="this.ship" otherobject="$target"/>
-              <event_object_destroyed object="$target"/>
-            </check_any>
-          </conditions>
-        </interrupt>
-      </move_to>
-      <stop_moving object="this.ship"/>
-
-      <do_if value="$target.exists">
-	<collect_deployable object="this.ship" deployable="$target" />
-        <remove_from_group group="$targetgroup" object="$target"/>
-	<debug_to_file name="this.ship.idcode" directory="'CollectSectorDeployables'" append="true"  chance="$debugchance"
-		       text="' cdpl: collect %1 %2  '.[$target.class, $target.idcode ]" />
-        <wait min="100ms" max="1s"/>
-      </do_if>
-
-      <!-- Iterate -->
-      <do_if value="$targetgroup.count and this.ship.ammostorage.deployable.free ge 1">
-        <resume label="getone" />
-      </do_if>
-
-      <wait min="1s" max="2s"/>
-
-      <set_to_default_flight_control_model object="this.ship" />
-
+      <--ToDo
+	   If owned: continue to collect
+	   else  Approach to hack distance.
+	         Calculate success rate based on crew skill
+                    (possibly faction standing?
+	               Higher standings means lower security conditions, easier hack.
+                       Lower standings means higher security conditions, ai systems on alert
+                    )
+	         if failure, chance of causing hostile reaction.  ei lasertower attacks.
+	         succsess, changes ownership to player.
+	   Collect:
+	      Check Teleport research
+	      If true, check level.  Calculate teleporter distance based on level
+	        Trigger teleport collect.
+	      if not, then move to collect as normal.
+	-->
+	      
+	      
       <!-- done  -->
       <label name="finish" />
 
@@ -228,8 +201,6 @@
       <do_if value="this.ship.order == this.ship.defaultorder" >
 	<cancel_order order="this.ship.defaultorder"/>
       </do_if>
-
-    ?>
     </actions>
   </attention>
 </aiscript>

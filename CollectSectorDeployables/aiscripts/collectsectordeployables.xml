@@ -3,16 +3,11 @@
 <aiscript name="collectsectordeployables" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="1">
   <order id="CollectSectorDeployables" name="CollectSectorDeployables" description="Collect all deployables in from all factions" category="navigation" infinite="true">
     <params>
-
-      <param name="destination" type="position" text="Center point" comment="Center point. Position">
-        <input_param name="class" value="class.sector"/>
-      </param>
-
-      <param name="drp" type="bool" default="true" text="Collect Resource Probes" comment="" />
-      <param name="dnb" type="bool" default="true" text="Collect Beacons" comment="" />
-      <param name="dst" type="bool" default="true" text="Collect Satellites" comment="" />
-      <param name="dmm" type="bool" default="true" text="Collect Mines" comment="" />
-      <param name="dlt" type="bool" default="true" text="Collect Laser Towers" comment="" />
+      <param name="collect_resource_probe" type="bool" default="true" text="Collect Resource Probes" comment="" />
+      <param name="collect_beacon" type="bool" default="true" text="Collect Beacons" comment="" />
+      <param name="collect_satellite" type="bool" default="true" text="Collect Satellites" comment="" />
+      <param name="collect_mine" type="bool" default="true" text="Collect Mines" comment="" />
+      <param name="collect_laser_tower" type="bool" default="true" text="Collect Laser Towers" comment="" />
 
       <param name="near" type="bool" default="true" text="Nearest First" comment="" />
       
@@ -20,6 +15,11 @@
         <input_param name="truevalue" value="100"/>
       </param>
 
+      <param name="radius" type="length" default="this.ship.maxradarrange" text="Radius" comment="Radius">
+        <input_param name="min" value="1km"/>
+        <input_param name="max" value="[this.ship.maxradarrange , 20km].max"/>
+        <input_param name="step" value="1km"/>
+      </param>
     </params>
 
     <skill min="0"/> 
@@ -55,7 +55,7 @@
       <!--  -->
       <label name="prestart"/>
 
-      <debug_to_file name="this.ship.idcode" directory="'dragoncommands'" append="true"  chance="$debugchance"
+      <debug_to_file name="this.ship.idcode" directory="'CollectSectorDeployables'" append="true"  chance="$debugchance"
 		     text="'\ncollectdeployables begun %1  '.[player.age ]" />
 
       <set_value name="$targetsector" exact="$destination.{1}"/>
@@ -63,18 +63,19 @@
       
       <!--  -->
       <label name="start"/>
-
+      
+      <!-- If the ship has no more space for deployables -->
       <do_if value="this.ship.ammostorage.deployable.free lt 1">
-	<resume label="finish"/>
+	      <resume label="finish"/>
       </do_if>
 
       <set_order_syncpoint_reached order="this.ship.order" />
 
       <get_safe_pos result="$pos" sector="$targetsector" value="$destpos" radius="this.assignedcontrolled.size" max="$radius"/>
 
-      <!-- flyto point  -->
+      <!-- flyto player specified location -->
       <do_if value="this.sector != $targetsector or this.ship.distanceto.[$destination.{1},$destination.{2}] gt $radius">
-	<debug_to_file name="this.ship.idcode" directory="'dragoncommands'" append="true" chance="$debugchance"
+	      <debug_to_file name="this.ship.idcode" directory="'CollectSectorDeployables'" append="true" chance="$debugchance"
 		       text="' cdpl:flyto dest'" /> 
 
         <run_script name="'move.generic'">
@@ -82,92 +83,81 @@
           <param name="position" value="$pos"/>
           <param name="debugchance" value="$debugchance"/>
         </run_script>
-	<wait min="10ms" max="1s" />
+	      <wait min="10ms" max="1s" />
       </do_if>
 
       <!-- get targets -->
-      <set_value name="$clist" exact="[]" />
-      <do_if value="$drp">
-	<append_to_list name="$clist" exact="class.resourceprobe" />
+      <label name="get_sector_targets"/>
+        <do_if value="$targetsector != this.sector">
+          <resume label="start"/>
+        </do_if>    
+      <set_value name="$collectableList" exact="[]" />
+      <do_if value="$collect_resource_probe">
+	      <append_to_list name="$collectableList" exact="class.resourceprobe" />
       </do_if>
-      <do_if value="$dnb">
-	<append_to_list name="$clist" exact="class.navbeacon" />
+      <do_if value="$collect_beacon">
+	      <append_to_list name="$collectableList" exact="class.navbeacon" />
       </do_if>
-      <do_if value="$dst">
-	<append_to_list name="$clist" exact="class.satellite" />
+      <do_if value="$collect_satellite">
+	      <append_to_list name="$collectableList" exact="class.satellite" />
       </do_if>
-      <do_if value="$dmm">
-	<append_to_list name="$clist" exact="class.mine" />
+      <do_if value="$collect_mine">
+	      <append_to_list name="$collectableList" exact="class.mine" />
       </do_if>
 
-      <find_object groupname="$targetgroup" class="$clist" space="$targetsector" multiple="true">
-        <match_distance value="$destpos" space="$targetsector" max="$radius"/>
-	<match owner="faction.player" />
-      </find_object>
+      <!-- List of the above collectable objects -->
+      <find_object groupname="$targetgroup" class="$collectableList" space="$targetsector" multiple="true" />
       <wait min="3ms" max="11ms" />
 
-      <!-- LT's are special, LT2's moreso -->
-      <do_if value="$dlt">
-	<set_value name="$clist" exact="[class.ship_xs]" />
-	<find_dockingbay name="$sdocks" object="this.ship" multiple="true">
+      <do_if value="$collect_laser_tower">
+        <!-- Start new class list -->
+        <set_value name="$collectableList" exact="[class.ship_xs]" />
+        <!-- Check to see if current ship can collect small ships -->
+        <find_dockingbay name="$sdocks" object="this.ship" multiple="true">
           <match_dock size="tag.dock_s" free="true"/>
-	</find_dockingbay>
-	<do_if value="@$sdocks.count" >
-	  <append_to_list name="$clist" exact="class.ship_s" />
-	</do_if>
-	<find_object groupname="$targetgroup" append="true" space="$targetsector" multiple="true" class="$clist" >
-	  <match shiptype="shiptype.lasertower"/>	    
-          <match_distance value="$destpos" space="$targetsector" max="$radius"/>
-	  <match owner="faction.player" />
-	</find_object>
-	<wait min="3ms" max="11ms" />
-      </do_if>
+        </find_dockingbay>
+        <do_if value="@$sdocks.count" >
+            <!-- Add small ships to the list to include the T2 Lasertowers -->
+        	  <append_to_list name="$collectableList" exact="class.ship_s" />
+        </do_if>
 
-
-      <!--
-      <debug_to_file name="this.ship.idcode" directory="'dragoncommands'" append="true"  chance="$debugchance"
-		     text="' cdpl: targets=%1  '.[$targetgroup.count ]" />
-      <do_all exact="$targetgroup.count" counter="$i">
-	<debug_to_file name="this.ship.idcode" directory="'dragoncommands'" append="true"  chance="$debugchance"
-		       text="' cdpl: target %1 %2 %3 '.[$targetgroup.{$i}, $targetgroup.{$i}.idcode, $targetgroup.{$i}.class ]" />
-      </do_all>
-      <resume label="finish" />
-      -->
-	
-      <do_if value="@$targetgroup.count lt 1 or this.ship.ammostorage.deployable.free lt 1">
-	<resume label="finish"/>
+        <!-- Include Lasertowers to the Target list -->
+        <find_object groupname="$targetgroup" append="true" space="$targetsector" multiple="true" class="$collectableList" >
+          <match shiptype="shiptype.lasertower"/>
+        </find_object>
+        <wait min="3ms" max="11ms" />
       </do_if>
 
       <label name="getone" />
-      
+      <!-- select a target -->
 
-      <!-- select one target -->
       <do_if value="$near">
-	<!-- nearest target; from move.collect.ship.smallship as is much else here -->
-	<set_value name="$nearest" exact="null"/>
-	<set_value name="$nearestdist" exact="null"/>
-	<do_all exact="$targetgroup.count" counter="$i">
-          <do_if value="not $nearest and $targetgroup.{$i}.sector == this.sector">
+        <!-- nearest target; from move.collect.ship.smallship as is much else here -->
+        <set_value name="$nearest" exact="null"/>
+        <set_value name="$nearestdist" exact="null"/>
+        <do_all exact="$targetgroup.count" counter="$i">
+          <!-- First in list -->
+          <do_if value="not $nearest">
             <set_value name="$nearest" exact="$targetgroup.{$i}"/>
             <set_value name="$nearestdist" exact="$targetgroup.{$i}.distanceto.{this.ship}"/>
           </do_if>
-          <do_elseif value="$nearest and $targetgroup.{$i}.sector == this.sector">
-            <do_if value="$targetgroup.{$i}.distanceto.{this.ship} lt $nearestdist">
-	      <set_value name="$nearest" exact="$targetgroup.{$i}"/>
-	      <set_value name="$nearestdist" exact="$targetgroup.{$i}.distanceto.{this.ship}"/>
-            </do_if>
-          </do_elseif>
-	</do_all>
-	<set_value name="$target" exact="$nearest" />
+          <do_else>
+              <do_if value="$targetgroup.{$i}.distanceto.{this.ship} lt $nearestdist">
+                <set_value name="$nearest" exact="$targetgroup.{$i}"/>
+                <set_value name="$nearestdist" exact="$targetgroup.{$i}.distanceto.{this.ship}"/>
+              </do_if>
+          </do_else>
+        </do_all>
+        <set_value name="$target" exact="$nearest" />
       </do_if>
       <do_else>
-	<set_value name="$target" exact="$targetgroup.{1}" />
+        <set_value name="$target" exact="$targetgroup.{1}" />
       </do_else>
       
-      <!-- collect one -->
-      <set_command command="command.collect" param="$target" />
 
-      <label name="movetotarget" />
+      <?ingmore
+      <!-- collect target -->
+      <set_command command="command.collect" param="$target" />
       <!-- if necessary order the ship to move to the correct zone -->
       <do_if value="this.ship.zone != $target.zone">
         <run_script name="'move.generic'">
@@ -196,7 +186,7 @@
       <do_if value="$target.exists">
 	<collect_deployable object="this.ship" deployable="$target" />
         <remove_from_group group="$targetgroup" object="$target"/>
-	<debug_to_file name="this.ship.idcode" directory="'dragoncommands'" append="true"  chance="$debugchance"
+	<debug_to_file name="this.ship.idcode" directory="'CollectSectorDeployables'" append="true"  chance="$debugchance"
 		       text="' cdpl: collect %1 %2  '.[$target.class, $target.idcode ]" />
         <wait min="100ms" max="1s"/>
       </do_if>
@@ -220,7 +210,7 @@
       </run_script>
       <wait min="10ms" max="1s" />
 
-      <debug_to_file name="this.ship.idcode" directory="'dragoncommands'" append="true" chance="$debugchance"
+      <debug_to_file name="this.ship.idcode" directory="'CollectSectorDeployables'" append="true" chance="$debugchance"
 		     text="' cdpl:done'" /> 
 
       <do_if value="this.isplayerowned and not this.isclass.computer and not this.assignedcontrolled.nextorder and (not this.assignedcontrolled.commander or (this.assignedcontrolled.commander == player.occupiedship)) and notification.npc_await_orders.active">
@@ -239,6 +229,7 @@
 	<cancel_order order="this.ship.defaultorder"/>
       </do_if>
 
+    ?>
     </actions>
   </attention>
 </aiscript>

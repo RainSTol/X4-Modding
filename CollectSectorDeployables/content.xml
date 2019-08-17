@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<content name="CollectSectorDepoloyables" id="rs_1683358279" author="RainSTol" version="1" date="2019-08-16" save="0" description="This collects all deployables, even other factions." >
+  <text language="44" name="CollectSectorDepoloyables" description="CollectSectorDepoloyables"></text>
+</content>

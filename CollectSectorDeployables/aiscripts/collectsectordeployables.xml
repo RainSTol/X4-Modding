@@ -154,25 +154,70 @@
         <set_value name="$target" exact="$targetgroup.{1}" />
       </do_else>
       
+      <!-- determine transport research level and range-->
+      <do_if value="ware.research_teleportation.research.unlocked">
+        <set_value name="$transport_range" exact="2km"/> 
+        <do_if value="ware.research_teleportation_range_01.research.unlocked">
+          <set_value name="$transport_range" exact="4km"/> 
+        </do_if>
+        <do_if value="ware.research_teleportation_range_02.research.unlocked">
+          <set_value name="$transport_range" exact="8km"/> 
+        </do_if>
+        <do_if value="ware.research_teleportation_range_03.research.unlocked">
+          <set_value name="$transport_range" exact="16km"/> 
+        </do_if>
+      </do_if>
+      <do_else>
+        <!-- the hard way -->
+        <set_value name="$transport_range" exact="500m"/>
+      </do_else>
 
-      <--ToDo
-	   If owned: continue to collect
-	   else  Approach to hack distance.
-	         Calculate success rate based on crew skill
-                    (possibly faction standing?
-	               Higher standings means lower security conditions, easier hack.
-                       Lower standings means higher security conditions, ai systems on alert
-                    )
-	         if failure, chance of causing hostile reaction.  ei lasertower attacks.
-	         succsess, changes ownership to player.
-	   Collect:
-	      Check Teleport research
-	      If true, check level.  Calculate teleporter distance based on level
-	        Trigger teleport collect.
-	      if not, then move to collect as normal.
-	-->
-	      
-	      
+      <!-- collect target -->
+      <set_command command="command.collect" param="$target" />
+      
+      <do_if value="not $target.exists">
+        <resume label="getone"/>
+      </do_if>
+
+      <!-- move  (flight behaviour? ) -->
+      <get_safe_pos object="$target" zone="$target.zone" radius="this.ship.size / 2.0" allowyaxis="true" result="$pos" ignored="this.ship"/>
+      <set_value name="$destination" exact="$pos"/>
+      <move_to object="this.ship" destination="$target" flightbehaviour="flightbehaviour.generic" forcesteering="true" finishonapproach="true" >
+        <position value="$destination" max="$transport_range"/>
+        <interrupt>
+          <conditions>
+            <check_any>
+              <event_object_collided object="this.ship" otherobject="$target"/>
+              <event_object_destroyed object="$target"/>
+            </check_any>
+          </conditions>
+        </interrupt>
+      </move_to>
+      <stop_moving object="this.ship"/>
+
+      <do_if value="$target.exists">
+        <!-- If not player owned, then hack -->
+        <do_if value="$target.owner != faction.player">
+          
+        </do_if>
+
+
+	      <collect_deployable object="this.ship" deployable="$target" />
+        <remove_from_group group="$targetgroup" object="$target"/>
+	      <debug_to_file name="this.ship.idcode" directory="'CollectSectorDeployables'" append="true"  chance="$debugchance"
+		       text="' cdpl: collect %1 %2  '.[$target.class, $target.idcode ]" />
+        <wait min="100ms" max="1s"/>
+      </do_if>
+
+      <!-- Iterate -->
+      <do_if value="$targetgroup.count and this.ship.ammostorage.deployable.free ge 1">
+        <resume label="getone" />
+      </do_if>
+
+      <wait min="1s" max="2s"/>
+
+      <set_to_default_flight_control_model object="this.ship" />
+
       <!-- done  -->
       <label name="finish" />
 

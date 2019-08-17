@@ -6,22 +6,19 @@
       <param name="destination" required="true" type="position" text="{1041, 10027}" comment="Destination. Position: [space, position]. $destination with $radius defines the operational area where resources are looked for.">
         <input_param name="class" value="class.sector"/>
       </param>
+      <param name="radius" type="length" default="this.ship.maxradarrange" text="Radius" comment="Radius">
+        <input_param name="min" value="1km"/>
+        <input_param name="max" value="[this.ship.maxradarrange , 20km].max"/>
+        <input_param name="step" value="1km"/>
+      </param>
       <param name="collect_resource_probe" type="bool" default="true" text="Collect Resource Probes" comment="" />
       <param name="collect_beacon" type="bool" default="true" text="Collect Beacons" comment="" />
       <param name="collect_satellite" type="bool" default="true" text="Collect Satellites" comment="" />
       <param name="collect_mine" type="bool" default="true" text="Collect Mines" comment="" />
       <param name="collect_laser_tower" type="bool" default="true" text="Collect Laser Towers" comment="" />
-
       <param name="near" type="bool" default="true" text="Nearest First" comment="" />
-      
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100"/>
-      </param>
-
-      <param name="radius" type="length" default="this.ship.maxradarrange" text="Radius" comment="Radius">
-        <input_param name="min" value="1km"/>
-        <input_param name="max" value="[this.ship.maxradarrange , 20km].max"/>
-        <input_param name="step" value="1km"/>
       </param>
     </params>
 
@@ -58,9 +55,10 @@
       <!--  -->
       <label name="prestart"/>
 
-      <debug_to_file name="Collectlog.log" directory="'CollectSectorDeployables'" append="true"  chance="$debugchance"
-		     text="'\ncollectdeployables begun %1  '.[player.age ]" />
-
+      <debug_to_file name="Collectlog.log" append="true"  chance="$debugchance"
+		   text="'\ncollectdeployables begun %1  '.[player.age ]" />
+      <debug_to_file name="'Collectlog.log'" append="true" chance="$debugchance"
+       text="' Init:\n Destination: %1 %2 %3\n Radius: %4\n collect_resource_probe: %5\n collect_beacon: %6\n collect_mine: %7\n collect_laser_tower: %8\n near:%9'.[$destination, $destination.{1}, $destination.{2}, $radius, $collect_resource_probe, $collect_beacon,$collect_mine,$collect_laser_tower,$near]" />
       <set_value name="$targetsector" exact="$destination.{1}"/>
       <set_value name="$destpos" exact="$destination.{2}"/>
       
@@ -73,14 +71,12 @@
       </do_if>
 
       <set_order_syncpoint_reached order="this.ship.order" />
-
       <get_safe_pos result="$pos" sector="$targetsector" value="$destpos" radius="this.assignedcontrolled.size" max="$radius"/>
+      <debug_to_file name="Collectlog.log"  append="true" chance="$debugchance"
+		       text="' Destination details:\n  - this_sector %1 target_sector %2 destpos %3 pos %4'.[this.sector,$targetsector,$destpos,$pos]" />  
 
       <!-- flyto player specified location -->
       <do_if value="this.sector != $targetsector or this.ship.distanceto.[$destination.{1},$destination.{2}] gt $radius">
-	      <debug_to_file name="Collectlog.log" directory="'CollectSectorDeployables'" append="true" chance="$debugchance"
-		       text="' cdpl:flyto dest'" /> 
-
         <run_script name="'move.generic'">
           <param name="destination" value="$targetsector"/>
           <param name="position" value="$pos"/>
@@ -123,13 +119,20 @@
             <!-- Add small ships to the list to include the T2 Lasertowers -->
         	  <append_to_list name="$collectableList" exact="class.ship_s" />
         </do_if>
-
+        <debug_to_file name="Collectlog.log"  append="true" chance="$debugchance"
+		       text="' TargetList: %1'.[$targetgroup]" /> 
         <!-- Include Lasertowers to the Target list -->
         <find_object groupname="$targetgroup" append="true" space="$targetsector" multiple="true" class="$collectableList" >
           <match shiptype="shiptype.lasertower"/>
         </find_object>
         <wait min="3ms" max="11ms" />
       </do_if>
+        <!-- Log the targetgroup list-->
+        <set_value name="$output" exact="'Targetgroup ' + $targetgroup"/>
+        <do_all exact="$targetgroup.count" counter="$i">
+          <set_value name="$output" exact="'%s\n%s // %s // %s // %s'.[$output,$targetgroup.{$i},$targetgroup.{$i}.name,$targetgroup.{$i}..idcode, ]"/>
+        </do_all>
+        <debug_to_file name="Collectlog.log"  append="true" text="$output"/>
 
       <label name="getone" />
       <!-- select a target -->
@@ -207,7 +210,7 @@ x
 
 	      <collect_deployable object="this.ship" deployable="$target" />
         <remove_from_group group="$targetgroup" object="$target"/>
-	      <debug_to_file name="Collectlog.log" directory="'CollectSectorDeployables'" append="true"  chance="$debugchance"
+	      <debug_to_file name="Collectlog.log"  append="true"  chance="$debugchance"
 		       text="' cdpl: collect %1 %2  '.[$target.class, $target.idcode ]" />
         <wait min="100ms" max="1s"/>
       </do_if>
@@ -231,7 +234,7 @@ x
       </run_script>
       <wait min="10ms" max="1s" />
 
-      <debug_to_file name="Collectlog.log" directory="'CollectSectorDeployables'" append="true" chance="$debugchance"
+      <debug_to_file name="Collectlog.log"  append="true" chance="$debugchance"
 		     text="' cdpl:done'" /> 
 
       <do_if value="this.isplayerowned and not this.isclass.computer and not this.assignedcontrolled.nextorder and (not this.assignedcontrolled.commander or (this.assignedcontrolled.commander == player.occupiedship)) and notification.npc_await_orders.active">

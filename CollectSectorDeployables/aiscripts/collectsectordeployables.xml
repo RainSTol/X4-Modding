@@ -3,6 +3,9 @@
 <aiscript name="collectsectordeployables" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="1">
   <order id="CollectSectorDeployables" name="CollectSectorDeployables" description="Collect all deployables in from all factions" category="navigation" infinite="true">
     <params>
+      <param name="destination" required="true" type="position" text="{1041, 10027}" comment="Destination. Position: [space, position]. $destination with $radius defines the operational area where resources are looked for.">
+        <input_param name="class" value="class.sector"/>
+      </param>
       <param name="collect_resource_probe" type="bool" default="true" text="Collect Resource Probes" comment="" />
       <param name="collect_beacon" type="bool" default="true" text="Collect Beacons" comment="" />
       <param name="collect_satellite" type="bool" default="true" text="Collect Satellites" comment="" />

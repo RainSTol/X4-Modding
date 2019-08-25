@@ -9,7 +9,7 @@ Anthing inside the temporary quantum link bubble was instantly transported to th
 Testing quatities of anitmatter did not have a significant impact on the direct or distance traveled, while adjusting energy levels at the reaction site had significant impact.
 7 Antimatter Cells has proved to be the minimum amount that would create the stable quantum connection.  The Techs started to coin the phrase "Lucky7" to describe the packs of antimatter they would feed through the Anitmatter Converters.  This later shortened to just "Seven".
 
-Dotty also explained that the shield capacitors energy could be used, however doing this not only leaves the capcitors probably empty, but also increases the risky to shield generator damage or complete failure since they were not designed for the interaction they are being subjected to..
+Dotty also explained that the shield capacitors energy could be used, however doing this not only leaves the capcitors probably empty, but also increases the risk for shield generator damage or complete failure since they were not designed for the interaction they are being subjected to..
 
 Originial Idea's credit goes to Euclid's "PlayerJump" mod. https://www.nexusmods.com/x4foundations/mods/93
 

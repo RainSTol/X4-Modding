@@ -210,24 +210,19 @@
 
         <!-- Pick up collectable, or Dock Pod -->
         <debug_to_file name="$log"  directory="$dir" append="true"  chance="$debugchance"
-		       text="' Target: %s Shiptype: %s Status: %s'.[$target, $target.assignedcontrolled.type, $target.operational]" />
-        <do_if value = "$target.assignedcontrolled.type ==  shiptype.escapepod">
-          <create_position name="$targetpos" space="$startship" />
-          <move_to destination="$startship" object="$target" flightbehaviour="flightbehaviour.droneattach" uselocalhighways="false" forcesteering="true" abortpath="true" relativemovement="true">
-            <position value="$targetpos" />
-          </move_to>
+		       text="' Target: %s Shiptype: %s Status: %s'.[$target, $target.type, $target.operational]" />
+        <do_if value = "$target.type ==  shiptype.escapepod">
           <!-- attachment needs to happen after claim or the pilot will be wrecked! -->
           <!-- DANGER DANGER! do NOT use this.ship here, as this has already been moved to $target in claim_ship, therefore this.ship == $target ! -->
           <debug_to_file name="$log"  directory="$dir" append="true"  chance="$debugchance"
 		       text="' Attaching to target'" />
-          <attach_object_to_target object="$startship" target="$target" keepoffset="true" />
+          <attach_object_to_target object="$target" target="$startship" keepoffset="true" />
           <wait min="10s" />
           
           <create_npc_template name="$person" entity="this" object="$startship" role="entityrole.marine"/>
-          <transfer_people object="$target" otherobject="$startship">
+          <transfer_people object="$startship" otherobject="$target">
            <existing_people people="[$person]"/>
           </transfer_people>
-          <destroy_object object="$target" explosion="false"/>
         </do_if>
         <do_else>
 	        <collect_deployable object="this.ship" deployable="$target" />

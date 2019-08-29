@@ -11,6 +11,7 @@
       <param name="collect_satellite" type="bool" default="true" text="Collect Satellites" comment="" />
       <param name="collect_mine" type="bool" default="true" text="Collect Mines" comment="" />
       <param name="collect_laser_tower" type="bool" default="true" text="Collect Laser Towers" comment="" />
+      <param name="collect_pod" type="bool" default="true" text="Collect Escape Pods" comment="" />
       <param name="near" type="bool" default="true" text="Nearest First" comment="" />
       <param name="debugchance" type="bool" default="0" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100"/>
@@ -89,7 +90,9 @@
       </do_if>
 
       <!-- List of the above collectable objects -->
-      <find_object groupname="$targetgroup" class="$collectableList" space="$targetsector" multiple="true" />
+      <do_if value="$collectableList.count">
+        <find_object groupname="$targetgroup" class="$collectableList" space="$targetsector" multiple="true" />
+      </do_if>
       <wait min="3ms" max="11ms" />
 
       <do_if value="$collect_laser_tower">
@@ -111,6 +114,17 @@
         </find_object>
         <wait min="3ms" max="11ms" />
       </do_if>
+
+      <do_if value="$collect_pod">
+        <!-- Start new class list -->
+        <set_value name="$collectableList" exact="[class.ship_xs]" />
+        <!-- Include escapepod to the Target list -->
+        <find_object groupname="$targetgroup" append="true" space="$targetsector" multiple="true" class="$collectableList" >
+          <match shiptype="shiptype.escapepod"/>
+        </find_object>
+        <wait min="3ms" max="11ms" />
+      </do_if>
+
         <!-- Log the targetgroup list-->
         <set_value name="$output" exact="'List Contents:'"/>
         <do_all exact="$targetgroup.count" counter="$i">
@@ -186,16 +200,39 @@
       <stop_moving object="this.ship"/>
 
       <do_if value="$target.exists">
-
+        <set_value name="$startship" exact="this.ship" />
         <!-- If not player owned, then hack -->
         <do_if value="$target.owner != faction.player">
           <set_owner object="$target" faction="faction.player" overridenpc="true"/>
           <debug_to_file name="$log"  directory="$dir" append="true"  chance="$debugchance"
-		       text="' Hacked: %1 %2  '.[$target.class, $target.idcode ]" />
+		       text="' Hacked: %1 %2 Owner:%3'.[$target.class, $target.idcode, $target.owner]" />
         </do_if>
 
+        <!-- Pick up collectable, or Dock Pod -->
+        <debug_to_file name="$log"  directory="$dir" append="true"  chance="$debugchance"
+		       text="' Target: %s Shiptype: %s Status: %s'.[$target, $target.assignedcontrolled.type, $target.operational]" />
+        <do_if value = "$target.assignedcontrolled.type ==  shiptype.escapepod">
+          <create_position name="$targetpos" space="$startship" />
+          <move_to destination="$startship" object="$target" flightbehaviour="flightbehaviour.droneattach" uselocalhighways="false" forcesteering="true" abortpath="true" relativemovement="true">
+            <position value="$targetpos" />
+          </move_to>
+          <!-- attachment needs to happen after claim or the pilot will be wrecked! -->
+          <!-- DANGER DANGER! do NOT use this.ship here, as this has already been moved to $target in claim_ship, therefore this.ship == $target ! -->
+          <debug_to_file name="$log"  directory="$dir" append="true"  chance="$debugchance"
+		       text="' Attaching to target'" />
+          <attach_object_to_target object="$startship" target="$target" keepoffset="true" />
+          <wait min="10s" />
+          
+          <create_npc_template name="$person" entity="this" object="$startship" role="entityrole.marine"/>
+          <transfer_people object="$target" otherobject="$startship">
+           <existing_people people="[$person]"/>
+          </transfer_people>
+          <destroy_object object="$target" explosion="false"/>
+        </do_if>
+        <do_else>
+	        <collect_deployable object="this.ship" deployable="$target" />
+        </do_else>
 
-	      <collect_deployable object="this.ship" deployable="$target" />
         <remove_from_group group="$targetgroup" object="$target"/>
 	      <debug_to_file name="$log"  directory="$dir" append="true"  chance="$debugchance"
 		       text="' Picked up: %1 %2  '.[$target.class, $target.idcode ]" />
